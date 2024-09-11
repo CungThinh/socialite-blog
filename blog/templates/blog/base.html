@@ -1,0 +1,371 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="{%  static 'blog/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'blog/icons.css' %}">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unicons.iconscout.com/release/v2.1.9/css/unicons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/css/uikit.min.css"
+    />
+
+    <!-- Swal -->
+    <script src="https://unpkg.com/sweetalert2@7.8.2/dist/sweetalert2.all.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/js/uikit-icons.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.8.2/dist/sweetalert2.all.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="{% static 'blog/main.js' %}"></script>
+    <script src="{% static 'blog/tippy.all.min.js' %}"></script>
+    <
+    {% if title %}
+    <title>Django Blog - {{ title }}</title>
+    {% else %}
+    <title>Django Blog</title>
+    {% endif %}
+    <header class="site-header">
+      {% block navbar %}
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <a class="navbar-brand mr-4" href="/">Django Blog</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarToggle"
+            aria-controls="navbarToggle"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{% url 'blog-home' %}">Home</a>
+              <a class="nav-item nav-link" href="{% url 'blog-about' %}"
+                >About</a
+              >
+            </div>
+
+            <!--Search section-->
+            <div
+              class="header-search-icon"
+              uk-toggle="target: #wrapper ; cls: show-searchbox"
+            ></div>
+            <div class="header_search">
+              <i class="uil-search-alt"></i>
+              <input
+                value=""
+                type="text"
+                class="form-control"
+                placeholder="Search for Friends , Videos and more.."
+                id="search-input"
+                autocomplete="off"
+              />
+              <div uk-drop="mode: click" class="header_search_dropdown">
+                <h4 class="search_title">Recently</h4>
+                <ul id="search-results"></ul>
+              </div>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav ms-auto">
+              {% if user.is_authenticated %}
+              <a href="{% url 'chat-room' %}" class="is_icon" uk-tooltip="title: Message">
+                <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"></path></svg>
+                <span>0</span>
+              </a>
+              <a href="#" class="is_icon">
+                <i class="fas fa-user-plus text-secondary"></i>
+                <!-- <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg> -->
+                <span>{{ friend_request.count }}</span>
+              </a>
+              <div uk-drop="mode: click" class="header_dropdown">
+                <div class="dropdown_scrollbar" data-simplebar>
+                  <div class="drop_headline">
+                    <h4>Friend Requests</h4>
+                    <div class="btn_action">
+                      <a
+                        href="#"
+                        data-tippy-placement="left"
+                        title="Friend Requests"
+                      >
+                        <ion-icon name="settings-outline"></ion-icon>
+                      </a>
+                    </div>
+                  </div>
+                  <ul>
+                    {% for f in friend_request %}
+                    <li class="mb-2 shadow p-3">
+                        <a href="#">
+                          <div class="drop_avatar">
+                            <img src="{{f.sender.profile.image.url}}" alt="" style="width: 45px; height: 45px;"/>
+                          </div>
+                          <span class="drop_icon bg-primary text-white d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 27px; height: 27px;">
+                            <i class="fas fa-thumbs-up"></i>
+                          </span>
+                          <div class="drop_text">
+                            <p>
+                              <strong>{{f.sender.username}}</strong> send you a friend request.
+                            </p>
+                            <time> {{f.date|timesince}} ago </time>
+                          </div>
+                          <div class="d-flex" id="friend-request-button-div">
+                            <!-- Accept button -->
+                            <a
+                              id="accept-friend-request"
+                              data-request-id="{{f.sender.id}}"
+                              class="accept-friend-request-hide{{f.sender.id}} align-items-center justify-content-center btn btn-primary text-white"
+                              style="margin-left: 5px; cursor: pointer;"
+                            >
+                              <span class="text-white accept-friend-request{{f.sender.id}}" id="friend-text">
+                                <i class="fas fa-user-plus"></i> Accept
+                              </span>
+                            </a>
+                      
+                            <!-- Reject button -->
+                            <a
+                              id="reject-friend-request"
+                              data-request-id="{{f.sender.id}}"
+                              class="reject-friend-request-hide{{f.sender.id}} align-items-center justify-content-center btn btn-danger text-white"
+                              style="margin-left: 5px; cursor: pointer;"
+                            >
+                              <span class="text-white reject-friend-request{{f.sender.id}}" id="friend-text">
+                                <i class="fas fa-user-minus"></i> Reject
+                              </span>
+                            </a>
+                          </div>
+                        </a>
+                      </li>
+                    {% empty %}
+                    <li>No Friend Request</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+              <a href="#">
+                <img
+                  src="{{request.user.profile.image.url}}"
+                  class="is_avatar"
+                  alt=""
+                />
+              </a>
+              <div
+                uk-drop="mode: click;offset:5"
+                class="header_dropdown profile_dropdown"
+              >
+                <a href="{% url 'profile' %}" class="user">
+                  <div class="user_avatar">
+                    <img src="{{request.user.profile.image.url}}" alt="" style="width: 45px; height: 45px;" />
+                  </div>
+
+                  <div class="user_name">
+                    <div>{{request.user.username}}</div>
+                    <span> @{{request.user.username}}</span>
+                  </div>
+                </a>
+                <a href="{% url 'profile' %}">
+                  <i class="fas fa-user"></i>
+                  My Account
+                </a>
+                <a href="{% url 'update_profile' %}">
+                  <i class="fas fa-cog"></i>
+                  Profile Settings
+                </a>
+                <a href="">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Manage Pages
+                </a>
+                <a href="pages-setting.html">
+                  <svg
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                  My Billing
+                </a>
+                <a href="#" id="night-mode" class="btn-night-mode">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+                    />
+                  </svg>
+                  Night mode
+                  <span class="btn-night-mode-switch">
+                    <span class="uk-switch-button"></span>
+                  </span>
+                </a>
+                <a href="{% url 'logout' %}">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    ></path>
+                  </svg>
+                  Log Out
+                </a>
+              </div>
+              {% else %}
+              <a class="nav-item nav-link" href="{% url 'register'%}">Login</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </nav>
+      {% endblock navbar %}
+    </header>
+  </head>
+  <body>
+    <main role="main" class="container">
+      {% block content %}{% endblock %}</div>
+      <div class="row">
+        <div class="col-md-8"></div>
+        {% block friends %}
+        <!-- Đây là phần danh sách bạn bè, đặt ở bên phải -->
+        <div class="friends-section" style="position: fixed; right: 300px; top: 70px; width: 250px;">
+            <div class="lg:w-72 w-full" uk-sticky="offset:80">
+              <nav class="responsive-nav border-b extanded mb-2 -mt-2">
+                <ul uk-switcher="connect: #group-details; animation: uk-animation-fade">
+                  <li class="uk-active">
+                    <a class="active" href="#0">Friends <span>{{request.user.profile.friends.count}}</span></a>
+                  </li>
+                </ul>
+              </nav>
+              <div class="contact-list">
+                {% for f in request.user.profile.friends.all %}
+                <a href="{% url 'user-posts' f.username %}">
+                  <div class="contact-avatar" id="friend-avatar-{{ f.id }}">
+                    <img src="{{f.profile.image.url}}" alt="">
+                    <span class="user_status"></span>
+                  </div>
+                  <div class="contact-username"> {{ f.username }} </div>
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endblock friends %}
+      </div>
+    </main>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      {% for message in messages %}
+          Swal.fire({
+              icon: '{{message.tags}}',
+              title: '{{message}}',
+              text: '{{message.tags}}',
+              timer: 1500
+          })
+      {% endfor %}
+    </script>
+    <script>
+      $(document).ready(function() {
+        $('#search-input').on('input', function() {
+            const query = $(this).val().trim();
+    
+            if (query) {
+                $.ajax({
+                    url: '/search/',
+                    data: {
+                        'q': query,
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        const resultsUl = $('#search-results');
+                        resultsUl.empty();
+    
+                        for (const user of data.users) {
+                            const listItem = $('<li></li>');
+    
+                            const link = $('<a></a>').attr('href', `/users/all_posts/${user.username}`);
+                            listItem.append(link);
+    
+                            if (user.profile_image) {
+                                const profileImage = $('<img>').attr('src', user.profile_image);
+                                profileImage.attr('alt', 'Profile Image');
+                                profileImage.addClass('list-avatar');
+                                link.append(profileImage);
+                            }
+    
+                            const nameDiv = $('<div></div>').addClass('list-name').text(user.full_name);
+                            link.append(nameDiv);
+    
+                            resultsUl.append(listItem);
+                        }
+                    },
+                    error: function() {
+                        console.log('Error occurred during the AJAX request.');
+                    }
+                });
+            } else {
+                $('#search-results').empty();
+            }
+            });
+        });
+    </script>
+  </body>
+</html>

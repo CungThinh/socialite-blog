@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv/
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Static and media files
+staticfiles/
+media/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Celery
+celerybeat-schedule
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+.cache
+
+# pip and pipenv
+pip-log.txt
+pip-delete-this-directory.txt
+Pipfile.lock
+Pipfile
+
+# Pytest cache
+.pytest_cache/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
