@@ -18,8 +18,10 @@ class Room(models.Model):
     
     def get_latest_message(self):
         latest_message = self.message_set.order_by('-timestamp').first()
-        # message text
-        return latest_message.message
+        
+        if latest_message:
+            return latest_message.message
+        return "Not yet"
 
 
 class Message(models.Model):

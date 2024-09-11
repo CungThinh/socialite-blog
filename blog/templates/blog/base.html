@@ -105,11 +105,10 @@
               {% if user.is_authenticated %}
               <a href="{% url 'chat-room' %}" class="is_icon" uk-tooltip="title: Message">
                 <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"></path></svg>
-                <span>0</span>
+                <span>{{unread_message_count}}</span>
               </a>
               <a href="#" class="is_icon">
                 <i class="fas fa-user-plus text-secondary"></i>
-                <!-- <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg> -->
                 <span>{{ friend_request.count }}</span>
               </a>
               <div uk-drop="mode: click" class="header_dropdown">

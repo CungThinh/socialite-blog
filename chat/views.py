@@ -6,6 +6,7 @@ from users.models import Profile
 from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q
+from django.db.models import Max
 
 @login_required
 def CreateRoom(request, username):
@@ -32,7 +33,9 @@ def CreateRoom(request, username):
             
 @login_required
 def MessageView(request, username=None):
-    get_all_rooms = Room.objects.by_user(request.user)
+    get_all_rooms = Room.objects.by_user(request.user).annotate(
+        last_message_time = Max('message__timestamp')
+    ).order_by('-last_message_time')
     
     context = {
         "user": request.user,
@@ -59,7 +62,9 @@ def GetChatMesssages(request, room_id):
         for message in messages:
             sender = User.objects.filter(username= message.sender).first()           
             sender_img_url = sender.profile.image.url
-            data = {'sender': message.sender, 'message': message.message, 'sender_img_url': sender_img_url}
+            data = {'sender': message.sender, 'message': message.message, 'sender_img_url': sender_img_url, 'timestamp': message.timestamp}
+            message.isRead = True
+            message.save()
             messages_data.append(data)
         return JsonResponse({'messages': messages_data}, status=200)
     except Room.DoesNotExist:

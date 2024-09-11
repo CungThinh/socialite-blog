@@ -105,7 +105,7 @@ function loadMessages(roomId) {
           <div class="${message.sender === currentUser ? "outgoing_msg" : "incoming_msg"}">
             <div class="${message.sender === currentUser ? "sent_msg" : "received_msg"}">
                 <p>${message.message}</p>
-                <div class="time_date">${message.timestamp}</div>
+                <div class="time_date">${formatTimestamp(message.timestamp)}</div>
             </div>
           </div>
         `;
@@ -119,7 +119,7 @@ function loadMessages(roomId) {
             <div class="${message.sender === currentUser ? "sent_msg" : "received_msg"}">
               <div class="received_withd_msg">
                 <p>${message.message}</p>
-                <div class="time_date">${message.timestamp}</div>
+                <div class="time_date">${formatTimestamp(message.timestamp)}</div>
               </div>
             </div>
           </div>
@@ -252,4 +252,17 @@ function startChat(username) {
       console.log("Error creating or getting room", error);
     }
   });
+}
+
+// Utils
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const options = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+  return date.toLocaleDateString(undefined, options);
 }
