@@ -87,14 +87,17 @@
             ></div>
             <div class="header_search">
               <i class="uil-search-alt"></i>
-              <input
-                value=""
-                type="text"
-                class="form-control"
-                placeholder="Search for Friends , Videos and more.."
-                id="search-input"
-                autocomplete="off"
-              />
+              <form method="GET" action="{% url 'blog-home' %}">
+                <input
+                  value=""
+                  name="q"
+                  type="text"
+                  class="form-control"
+                  placeholder="Search for Friends , Posts and more.."
+                  id="search-input"
+                  autocomplete="off"
+                />
+              </form>
               <div uk-drop="mode: click" class="header_search_dropdown">
                 <h4 class="search_title">Recently</h4>
                 <ul id="search-results"></ul>
@@ -336,25 +339,43 @@
                     success: function(data) {
                         const resultsUl = $('#search-results');
                         resultsUl.empty();
-    
-                        for (const user of data.users) {
-                            const listItem = $('<li></li>');
-    
-                            const link = $('<a></a>').attr('href', `/users/all_posts/${user.username}`);
-                            listItem.append(link);
-    
-                            if (user.profile_image) {
-                                const profileImage = $('<img>').attr('src', user.profile_image);
-                                profileImage.attr('alt', 'Profile Image');
-                                profileImage.addClass('list-avatar');
-                                link.append(profileImage);
-                            }
-    
-                            const nameDiv = $('<div></div>').addClass('list-name').text(user.full_name);
-                            link.append(nameDiv);
-    
-                            resultsUl.append(listItem);
+
+                        if (data.users.length > 0) {
+                          resultsUl.append('<li><strong>Users:</strong></li>');
+                          for (const user of data.users) {
+                              const listItem = $('<li></li>');
+      
+                              const link = $('<a></a>').attr('href', `/users/all_posts/${user.username}`);
+                              listItem.append(link);
+      
+                              if (user.profile_image) {
+                                  const profileImage = $('<img>').attr('src', user.profile_image);
+                                  profileImage.attr('alt', 'Profile Image');
+                                  profileImage.addClass('list-avatar');
+                                  link.append(profileImage);
+                              }
+      
+                              const nameDiv = $('<div></div>').addClass('list-name').text(user.full_name);
+                              link.append(nameDiv);
+      
+                              resultsUl.append(listItem);
+                          }
                         }
+                        
+                        if (data.posts.length > 0) {
+                          resultsUl.append('<li><strong>Posts:</strong></li>');
+                          for (const post of data.posts) {
+                              const postItem = $('<li></li>');
+
+                              const postLink = $('<a></a>').attr('href', post.url);
+                              postItem.append(postLink);
+
+                              const postTitle = $('<div></div>').addClass('list-title').text(post.title);
+                              postLink.append(postTitle);
+
+                              resultsUl.append(postItem);
+                          }
+                      }
                     },
                     error: function() {
                         console.log('Error occurred during the AJAX request.');
@@ -364,6 +385,14 @@
                 $('#search-results').empty();
             }
             });
+        });
+
+        $(document).ready(function() {
+          $('#search-input').on('keypress', function(e) {
+              if (e.which == 13) { // Nhấn phím Enter
+                  $(this).closest('form').submit();
+              }
+          });
         });
     </script>
   </body>

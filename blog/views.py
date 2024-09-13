@@ -9,6 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Friend, FriendRequest
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from elasticsearch_dsl.query import MultiMatch  
+from .documents import PostDocument
 
 
 # Create your views here.
@@ -17,13 +19,20 @@ class PostListView(ListView):
     models = Post
     template_name = 'blog/home.html'
     context_object_name = 'posts'
-    paginate_by = 5
 
     def get_queryset(self):
-        return Post.objects.all().order_by('-date_posted')
+        q = self.request.GET.get('q')
+        if q:
+            query = MultiMatch(query=q, fields=["title", "content", "author_name"], fuzziness="AUTO")
+            result = PostDocument.search().query(query).to_queryset()
+            print(result)
+            return result
+        else: 
+            return Post.objects.all().order_by('-date_posted')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '')
         return context
     
 
@@ -132,12 +141,13 @@ def reply_comment(request, comment_id):
     else:
         return JsonResponse({'status': 'error', 'message': 'No content provided.'})
     
-def search_users(request):
+def search(request):
     query = request.GET.get('q')
     if query:
-        users = User.objects.filter(username__icontains=query) | User.objects.filter(email__icontains=query)
         users_data = []
+        posts_data = []
         
+        users = User.objects.filter(username__icontains=query) | User.objects.filter(email__icontains=query) 
         for user in users:
             user_data = {
                 'username': user.username,
@@ -147,10 +157,23 @@ def search_users(request):
             }
             
             users_data.append(user_data)
+            
+        post_query = MultiMatch(query=query, fields=["title"], fuzziness="AUTO")
+        posts = PostDocument.search().query(post_query).to_queryset()
+        for post in posts:
+            post_data = {
+                'title': post.title,
+                'url': post.get_absolute_url()
+            }
+            posts_data.append(post_data)
+        
+    
     else:
         user_data = []
+        posts_data = []
 
-    return JsonResponse({'users': users_data}) 
+
+    return JsonResponse({'users': users_data, 'posts': posts_data}) 
 
 @csrf_exempt
 def add_friend(request):

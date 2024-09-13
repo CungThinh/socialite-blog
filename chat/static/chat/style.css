@@ -21,7 +21,7 @@ img{ max-width:100%;}
   align-items: center;
 }
 
-.heading_srch{ padding:10px 29px 10px 5px; overflow:hidden; border-bottom:1px solid #c4c4c4; display: flex; align-items: center;}
+.heading_srch{ padding:10px 5px 10px 5px; overflow:hidden; border-bottom:1px solid #c4c4c4; display: flex; align-items: center; gap: 20px}
 
 .recent_heading h4 {
   color: #05728f;
@@ -112,6 +112,13 @@ img{ max-width:100%;}
   width: 100%;
 }
 
+.input_msg_write {
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: flex-start; /* Đẩy các phần tử sang trái */
+}
+
+
 .type_msg {border-top: 1px solid #c4c4c4;position: relative;}
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
@@ -120,11 +127,11 @@ img{ max-width:100%;}
   color: #fff;
   cursor: pointer;
   font-size: 17px;
-  height: 33px;
-  position: absolute;
-  right: 0;
-  top: 11px;
-  width: 33px;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .messaging { padding: 0 0 50px 0;}
 .msg_history {
@@ -133,7 +140,8 @@ img{ max-width:100%;}
 }
 
 .heading_srch i {
-  margin-left: auto;
+  float:right;
+  margin-left: 20px;
   cursor: pointer;
   align-items: center;
   font-size: 25px;

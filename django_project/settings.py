@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_elasticsearch_dsl',
     'blog.apps.BlogConfig',
     'users.apps.UsersConfig',
     'crispy_forms',
@@ -97,6 +98,11 @@ DATABASES = {
     }
 }
 
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'http://localhost:9200'  # Chỉnh lại đúng địa chỉ Elasticsearch
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

@@ -1040,6 +1040,15 @@ img {
   color: #2d2d2d;
 }
 
+.header_search .header_search_dropdown ul .list-title {
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 0%;
+  flex: 1 1 0%;
+  font-size: 16px;
+  font-weight: 500;
+  color: #2d2d2d;
+}
+
 .header_dropdown {
   width: 340px;
   margin-top: 50px;

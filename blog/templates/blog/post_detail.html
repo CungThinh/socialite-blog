@@ -1,14 +1,98 @@
 {% extends 'blog/base.html' %}
+
 {% block content %}
-    <article class="media content-section d-flex">
-        <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}" alt="">
-      <div class="media-body">
-        <div class="article-metadata">
-          <a class="mr-2" href="#">{{ object.author }}</a>
-          <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
-        </div>
-        <h2 class="article-title">{{ object.title }}</h2>
-        <p class="article-content">{{ object.content }}</p>
+<div class="row">
+  <div class="col-md-8">
+    <div class="content-wrapper d-flex justify-content-between">
+      <!-- Đây là phần danh sách bài viết -->
+      <div class="posts-section">
+        <article class="media content-section d-flex flex-column">
+          <div class="d-flex">
+            <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}" alt="">
+            <div class="media-body">
+              <div class="article-metadata">
+                <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
+                <small class="text-muted">{{ post.date_posted|date:"F d, Y" }}</small>
+              </div>
+              <h2 style="margin-top: auto;"><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
+              <p class="article-content">{{ post.content }}</p>
+              <div class="post-rating">
+                {% if user in post.likes.all %}
+                <span class="post-rating-button material-icons liked" status="true" post-id="{{ post.id }}">thumb_up</span>
+                {% else %}
+                <span class="post-rating-button material-icons" status="false" post-id="{{ post.id }}">thumb_up</span>
+                {% endif %}
+                <span class="like-count" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                <!-- Nút comment -->
+                <span class="post-rating-button material-icons comment">comment</span>
+                <span class="comment-count">{{ post.count_comments_and_replies }}</span>
+                <span class="post-rating-button material-icons">share</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Phần bình luận -->
+          <div class="comments-container" style="display: block">
+            <ul id="comments-list-{{post.id}}" class="comments-list">
+              {% for comment in post.comments.all %}
+              <li>
+                <div class="comment-main-level" comment-id="{{comment.id}}">
+                  <div class="rounded-circle comment-avatar">
+                    <img src="{{ comment.author.profile.image.url}}" alt="">
+                  </div>
+                  <div class="comment-box" data-comment-id="{{comment.id}}">
+                    <div class="comment-head">
+                      <h6 class="comment-name">
+                        <a href="{% url 'user-posts' comment.author.username %}">{{ comment.author.username }}</a>
+                      </h6>
+                      {% load humanize %}
+                      <span>{{ comment.date_posted|timesince}} ago</span>
+                      <i class="fa fa-reply"></i>
+                      <i class="fa fa-heart"></i>
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+                  </div>
+                </div>
+
+                <!-- Phần trả lời bình luận -->
+                {% for reply in comment.replies.all %}
+                <ul class="comments-list reply-list">
+                  <li>
+                    <div class="comment-avatar">
+                      <img src="{{ reply.author.profile.image.url}}" alt="">
+                    </div>
+                    <div class="comment-box">
+                      <div class="comment-head">
+                        <h6 class="comment-name">
+                          <a href="#">{{ reply.author.username }}</a>
+                        </h6>
+                        {% load humanize %}
+                        <span>{{ reply.date_posted|timesince}} ago</span>
+                        <i class="fa fa-heart"></i>
+                      </div>
+                      <div class="comment-content">{{ reply.content }}</div>
+                    </div>
+                  </li>
+                </ul>
+                {% endfor %}
+              </li>
+              {% empty %}
+              <li class="comment-empty"><p>Chưa có bình luận nào.</p></li>
+            </ul>
+            {% endfor %}
+          </div>
+          <div class="comments-input" data-reply-to-comment-id="" style="display: flex;">
+            <input type="text" id="comment-input-{{post.id}}" placeholder="Enter your comment" class="form-control">
+            <button class="btn btn-primary mt-1 submit-comment" data-post-id="{{ post.id }}">Send</button>
+          </div>
+        </article>
       </div>
-    </article>
+    </div>
+</div>
+</div>
+<style>
+  .comments-container {
+    max-height: 500px;
+  }
+</style>
 {% endblock content %}
