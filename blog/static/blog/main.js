@@ -1,41 +1,195 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const likeButtons = document.querySelectorAll('.post-rating-button.material-icons[post-id]');
+//Event Delegation
 
-    likeButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const postId = this.getAttribute('post-id');
-            fetch(`/like-post/${postId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(response => {
-                    if (response.status === 302) {
-                        // Redirect to login page
-                        window.location.href = '/login/';
-                        return;
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const likeCountSpan = document.getElementById(`like-count-${postId}`);
-                    likeCountSpan.innerText = data.likes_count;
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.posts-section').addEventListener('click', function (event) {
+        const target = event.target;
 
-                    // Chuyển đổi trạng thái liked/unliked
-                    if (data.liked) {
-                        this.setAttribute('status', 'true');
-                        this.classList.add('liked');
-                    } else {
-                        this.setAttribute('status', 'false');
-                        this.classList.remove('liked');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
+        // Kiểm tra xem target có là nút like không
+        if(target.classList.contains('post-rating-button') && target.classList.contains('material-icons')) {
+            const postId = target.getAttribute('post-id');
+            if(postId) {
+                handleLikePost(postId, target);
+            }
+        }
+
+        // Xử lý nút comment
+        if (target.classList.contains('post-rating-button') && target.classList.contains('comment')) {
+            const article = target.closest('article');
+            if (article) {
+                toggleCommentsSection(article);
+            }
+        }
+
+        if (target.classList.contains('submit-comment')) {
+            var button = event.target;
+            const postId = target.getAttribute('data-post-id');
+            var content = document.querySelector(`#comment-input-${postId}`).value;
+            var replyToCommentId = button.closest('.comments-input').getAttribute("data-reply-to-comment-id");
+
+            if (replyToCommentId) {
+                submitReplyComment(replyToCommentId, content, postId)
+            }else {
+                submitNewComment(postId, content)
+            }
+        }
+
+        if(target.classList.contains('fa-reply')) {
+            const commentBox = target.closest('.comment-box');
+            const commentAuthor = commentBox.querySelector('.comment-name a').innerText;
+            const commentsInputContainer = target.closest('article').querySelector('.comments-input');
+            const commentId = commentBox.getAttribute('data-comment-id');
+            const replyToCommentText = document.getElementById('reply-to-comment');
+            const replyToComment = document.querySelector('.comments-reply');
+
+            commentsInputContainer.setAttribute('data-reply-to-comment-id', commentId);
+            replyToCommentText.innerText = 'Replying to ' + commentAuthor;
+            replyToComment.style.display = 'flex';
+        }
+
+        if (target.classList.contains('cancel-reply')) {
+            const replyToCommentContainer = target.closest('.comments-reply');
+            const commentsInputContainer = target.closest('article').querySelector('.comments-input');
+        
+            // Ẩn phần "Replying to..." và xóa thông tin người được reply
+            replyToCommentContainer.style.display = 'none';
+            commentsInputContainer.setAttribute('data-reply-to-comment-id', '');
+            document.getElementById('reply-to-comment').innerText = '';  // Xóa nội dung "Replying to..."
+        }
     });
 });
+
+function submitReplyComment(replyToCommentId, content, postId) {
+    fetch(`/post/reply-comment/${replyToCommentId}`, {
+        method: "POST",
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "content=" + encodeURIComponent(content)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                var commentBox = document.querySelector(`[data-comment-id="${replyToCommentId}"]`);
+                var replyList = commentBox.closest('li').querySelector('.reply-list');
+                if (!replyList) {
+                    // Nếu chưa có danh sách reply, tạo mới và thêm vào sau comment-main-level
+                    replyList = document.createElement('ul');
+                    replyList.classList.add('comments-list', 'reply-list');
+                    commentBox.closest('li').appendChild(replyList);
+                }
+
+                // Khi bấm nút send, kiểm tra xem <li></li> của commentbox có chứa
+                // reply-list hay không, nếu có thì append phẩn tử newReply vào
+                // Nếu ko thì tạo một cấu trúc replyList, add phần tử newRelpy vào
+                // Sau đó thêm vào replyList 
+
+                var newReply = `
+                            <li>
+                                <div class="comment-avatar"><img src="${data.avatar}" alt=""></div>
+                                <div class="comment-box">
+                                    <div class="comment-head">
+                                        <h6 class="comment-name"><a href="#">${data.author}</a></h6>
+                                        <span>${data.date_posted}</span>
+                                        <i class="fa fa-heart"></i>
+                                    </div>
+                                    <div class="comment-content">
+                                        ${data.content}
+                                    </div>
+                                </div>
+                            </li>
+                        `;
+
+                replyList.insertAdjacentHTML('beforeend', newReply);
+
+                document.querySelector(`#comment-input-${postId}`).value = '';
+                document.querySelector('.comments-input').setAttribute('data-reply-to-comment-id', '');
+                document.getElementById('reply-to-comment').style.display = 'none';
+            } else {
+                alert(data.message)
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function submitNewComment(postId, content) {
+    fetch(`/post/add-comment/${postId}/`, {
+        method: "POST",
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "content=" + encodeURIComponent(content)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                var commentList = document.querySelector(`#comments-list-${postId}`);
+
+                // Xóa thông báo "Chưa có bình luận nào" nếu có
+                var emptyComment = commentList.querySelector('.comment-empty');
+                if (emptyComment) {
+                    emptyComment.remove();
+                }
+
+                // Tạo phần tử bình luận mới
+                var newComment = `
+                    <li>
+                        <div class="comment-main-level">
+                            <div class="rounded-circle comment-avatar"><img src="${data.avatar}" alt=""></div>
+                            <div class="comment-box">
+                                <div class="comment-head">
+                                    <h6 class="comment-name"><a href="#">${data.author}</a></h6>
+                                    <span>${data.date_posted}</span>
+                                    <i class="fa fa-reply"></i>
+                                    <i class="fa fa-heart"></i>
+                                </div>
+                                <div class="comment-content">
+                                    ${data.content}
+                                </div>
+                            </div>
+                        </div>
+                    </li>`;
+
+                // Thêm bình luận mới vào danh sách bình luận
+                commentList.insertAdjacentHTML('beforeend', newComment);
+                document.querySelector(`#comment-input-${postId}`).value = '';  // Xóa nội dung input
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function handleLikePost(postId, target) {
+    fetch(`/like-post/${postId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (response.status === 302) {
+            window.location.href = '/login/';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        const likeCountSpan = document.getElementById(`like-count-${postId}`);
+        likeCountSpan.innerText = data.likes_count;
+
+        if (data.liked) {
+            target.setAttribute('status', 'true');
+            target.classList.add('liked');
+        } else {
+            target.setAttribute('status', 'false');
+            target.classList.remove('liked');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 
 function getCookie(name) {
     let cookieValue = null;
@@ -52,161 +206,157 @@ function getCookie(name) {
     return cookieValue;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    var submitButtons = document.querySelectorAll('.submit-comment');
+function toggleCommentsSection(article) {
+    const commentsContainer = article.querySelector('.comments-container');
+    const commentInput = article.querySelector('.comments-input');
+    if (commentsContainer.style.display === 'none' || commentsContainer.style.display === '') {
+        commentsContainer.style.display = 'block';
+        commentInput.style.display = 'flex';
+    } else {
+        commentsContainer.style.display = 'none';
+        commentInput.style.display = 'none';
+    }
+}
 
-    submitButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-            var postId = this.getAttribute('data-post-id');
-            var content = document.querySelector(`#comment-input-${postId}`).value;
-            var replyToCommentId = this.closest('.comments-input').getAttribute("data-reply-to-comment-id")
 
-            if (replyToCommentId) {
-                fetch(`/post/reply-comment/${replyToCommentId}`, {
-                    method: "POST",
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: "content=" + encodeURIComponent(content)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            var commentBox = document.querySelector(`[data-comment-id="${replyToCommentId}"]`);
-                            var replyList = commentBox.closest('li').querySelector('.reply-list');
-                            if (!replyList) {
-                                // Nếu chưa có danh sách reply, tạo mới và thêm vào sau comment-main-level
-                                replyList = document.createElement('ul');
-                                replyList.classList.add('comments-list', 'reply-list');
-                                commentBox.closest('li').appendChild(replyList);
-                            }
+// Lazy load
 
-                            // Khi bấm nút send, kiểm tra xem <li></li> của commentbox có chứa
-                            // reply-list hay không, nếu có thì append phẩn tử newReply vào
-                            // Nếu ko thì tạo một cấu trúc replyList, add phần tử newRelpy vào
-                            // Sau đó thêm vào replyList 
+document.addEventListener('DOMContentLoaded', () => {
+    let page = 2;
+    let isLoading = false;
+    const postContainer = document.querySelector('.posts-section');
+    const loadingIndicator = document.getElementById('loading');
 
-                            var newReply = `
-                                    <li>
-                                        <div class="comment-avatar"><img src="${data.avatar}" alt=""></div>
-                                        <div class="comment-box">
-                                            <div class="comment-head">
-                                                <h6 class="comment-name"><a href="#">${data.author}</a></h6>
-                                                <span>${data.date_posted}</span>
-                                                <i class="fa fa-heart"></i>
-                                            </div>
-                                            <div class="comment-content">
-                                                ${data.content}
-                                            </div>
+    window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 && !isLoading) {
+            loadMorePosts();
+        }
+    });
+
+    function loadMorePosts() {
+        if (isLoading) return;
+
+        isLoading = true;
+        loadingIndicator.style.display = 'block';
+
+        fetch(`/load-more-posts/?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                loadingIndicator.style.display = 'none';
+                if (data.posts.length > 0) {
+                    data.posts.forEach(post => {
+                        const article = document.createElement('article');
+                        article.classList.add('media', 'content-section', 'd-flex', 'flex-column');
+                        article.innerHTML = `
+                                <div class="d-flex">
+                                    <img class="rounded-circle article-img" src="${post.author_image}" alt="">
+                                    <div class="media-body">
+                                        <div class="article-metadata">
+                                            <a class="mr-2" href="/user-posts/${post.author}">${post.author}</a>
+                                            <small class="text-muted">${post.date_posted}</small>
                                         </div>
-                                    </li>
-                                `;
-
-                            replyList.insertAdjacentHTML('beforeend', newReply);
-
-                            document.querySelector(`#comment-input-${postId}`).value = '';
-                            document.querySelector('.comments-input').setAttribute('data-reply-to-comment-id', '');
-                            document.getElementById('reply-to-comment').style.display = 'none';
-                        } else {
-                            alert(data.message)
-                        }
-                    })
-            }
-            else {
-                fetch(`/post/add-comment/${postId}/`, {
-                    method: "POST",
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: "content=" + encodeURIComponent(content)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            var commentList = document.querySelector(`#comments-list-${postId}`);
-
-                            // Xóa thông báo "Chưa có bình luận nào" nếu có
-                            var emptyComment = commentList.querySelector('.comment-empty');
-                            if (emptyComment) {
-                                emptyComment.remove();
-                            }
-
-                            // Tạo phần tử bình luận mới
-                            var newComment = `
-                            <li>
-                                <div class="comment-main-level">
-                                    <div class="rounded-circle comment-avatar"><img src="${data.avatar}" alt=""></div>
-                                    <div class="comment-box">
-                                        <div class="comment-head">
-                                            <h6 class="comment-name"><a href="#">${data.author}</a></h6>
-                                            <span>${data.date_posted}</span>
-                                            <i class="fa fa-reply"></i>
-                                            <i class="fa fa-heart"></i>
-                                        </div>
-                                        <div class="comment-content">
-                                            ${data.content}
+                                        <h2 style="margin-top: auto;"><a class="article-title" href="/post-detail/${post.id}">${post.title}</a></h2>
+                                        <p class="article-content">${post.content}...</p>
+                                        <div class="post-rating">
+                                            <span class="post-rating-button material-icons" post-id="${post.id}">thumb_up</span>
+                                            <span class="like-count" id="like-count-${post.id}">${post.like_count}</span>
+                                            <span class="post-rating-button material-icons comment">comment</span>
+                                            <span class="comment-count">${post.comment_count}</span>
+                                            <span class="post-rating-button material-icons">share</span>
                                         </div>
                                     </div>
                                 </div>
-                            </li>`;
+                                <!-- Container cho comments -->
+                                <div class="comments-container" id="comments-container-${post.id}" style="display: none;">
+                                    <ul id="comments-list-${post.id}" class="comments-list">
+                                        <!-- Comments sẽ được load tại đây -->
+                                    </ul>
+                                </div>
+                                <!-- Input cho comment -->
+                                <div class="comments-reply" style="display: none;">
+                                    <span id="reply-to-comment"></span>
+                                    <i class="fa fa-x cancel-reply"></i>
+                                </div>
+                                <div class="comments-input" data-reply-to-comment-id="">
+                                    <input type="text" id="comment-input-${post.id}" placeholder="Enter your comment" class="form-control">
+                                    <button class="btn btn-primary mt-1 submit-comment" data-post-id="${post.id}">Send</button>
+                                </div>`;
 
-                            // Thêm bình luận mới vào danh sách bình luận
-                            commentList.insertAdjacentHTML('beforeend', newComment);
-                            document.querySelector(`#comment-input-${postId}`).value = '';  // Xóa nội dung input
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            };
-        });
-    })
+                        postContainer.appendChild(article);
+                        loadComments(post.id)
+                    });
+                    page++;
+                    isLoading = false;
+                } else {
+                    loadingIndicator.innerText = 'No more posts to load';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading more posts:', err);
+                isLoading = false;
+            });
+    }
 });
 
+function loadComments(postId) {
+    const commentsList = document.getElementById(`comments-list-${postId}`);
 
+    fetch(`/load-comments/${postId}/`)
+        .then(response => response.json())
+        .then(data => {
+            // Clear the current comments list (nếu cần reset trước khi load lại)
+            commentsList.innerHTML = '';
 
-document.addEventListener('DOMContentLoaded', function () {
-    var commentButtons = document.querySelectorAll('.post-rating-button.comment');
-
-    commentButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-            var article = this.closest('article');
-            var commentsContainer = article.querySelector('.comments-container');
-            var commentInput = article.querySelector('.comments-input');
-
-            if (commentsContainer.style.display === 'none' || commentsContainer.style.display === '') {
-                commentsContainer.style.display = 'block';
-                commentInput.style.display = 'flex';
+            if (data.comments.length === 0) {
+                // Hiển thị thông báo nếu không có bình luận nào
+                const emptyCommentElement = document.createElement('li');
+                emptyCommentElement.classList.add('comment-empty');
+                emptyCommentElement.innerHTML = `<p>Chưa có bình luận nào.</p>`;
+                commentsList.appendChild(emptyCommentElement);
             } else {
-                commentsContainer.style.display = 'none';
-                commentInput.style.display = 'none';  // Ẩn phần input
+                // Nếu có bình luận, hiển thị danh sách bình luận
+                data.comments.forEach(comment => {
+                    const commentElement = document.createElement('li');
+                    commentElement.innerHTML = `
+                            <div class="comment-main-level" comment-id="${comment.id}">
+                                <div class="rounded-circle comment-avatar">
+                                    <img src="${comment.profile_image_url}" alt="">
+                                </div>
+                                <div class="comment-box" data-comment-id="${comment.id}">
+                                    <div class="comment-head">
+                                        <h6 class="comment-name"><a href="/user-posts/${comment.author}">${comment.author}</a></h6>
+                                        <span>${comment.date_posted}</span>
+                                        <i class="fa fa-reply"></i>
+                                        <i class="fa fa-heart"></i>
+                                    </div>
+                                    <div class="comment-content">${comment.content}</div>
+                                </div>
+                            </div>
+                            <ul class="comments-list reply-list">
+                                ${comment.replies.map(reply => `
+                                    <li>
+                                        <div class="comment-avatar"><img src="${reply.profile_image_url}" alt=""></div>
+                                        <div class="comment-box">
+                                            <div class="comment-head">
+                                                <h6 class="comment-name"><a href="/user-posts/${reply.author}">${reply.author}</a></h6>
+                                                <span>${reply.date_posted}</span>
+                                                <i class="fa fa-heart"></i>
+                                            </div>
+                                            <div class="comment-content">${reply.content}</div>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        `;
+                    commentsList.appendChild(commentElement);
+                });
             }
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    var replyButton = document.querySelectorAll('.fa-reply')
-    var replyToComment = document.querySelector('.comments-reply')
-    var replyToCommentText = document.getElementById('reply-to-comment')
-
-    replyButton.forEach(function (button) {
-        button.addEventListener('click', function () {
-            var commentBox = this.closest('.comment-box');
-            var commentAuthor = commentBox.querySelector('.comment-name a').innerText;
-            var commentsInputContainer = this.closest('article').querySelector('.comments-input');
-            var commentId = commentBox.getAttribute('data-comment-id')
-
-            commentsInputContainer.setAttribute('data-reply-to-comment-id', commentId)
-            replyToCommentText.innerText = 'Replying to ' + commentAuthor;
-            replyToComment.style.display = 'flex';
         })
-    })
-})
+        .catch(error => console.error('Error loading comments:', error));
+}
 
-$(document).on("click", "#add-friend", function(){
+
+$(document).on("click", "#add-friend", function () {
     let id = $(this).attr("data-friend-id");
     let $this = $(this); // Lưu trữ tham chiếu đến phần tử đang click
     console.log(id);
@@ -217,7 +367,7 @@ $(document).on("click", "#add-friend", function(){
         data: {
             "id": id
         },
-        success: function(response){
+        success: function (response) {
             console.log("Bool ==", response.bool);
             if (response.bool == true) {
                 // Khi thêm bạn thành công, chuyển sang trạng thái "Cancel Request"
@@ -234,7 +384,7 @@ $(document).on("click", "#add-friend", function(){
     });
 });
 
-$(document).on("click", "#accept-friend-request", function() {
+$(document).on("click", "#accept-friend-request", function () {
     let id = $(this).attr("data-request-id");
     console.log(id);
 
@@ -244,7 +394,7 @@ $(document).on("click", "#accept-friend-request", function() {
         data: {
             "id": id
         },
-        success: function(response) {
+        success: function (response) {
             console.log(response.data);
             // Ẩn nút reject
             $(".reject-friend-request-hide" + id).hide()
@@ -255,7 +405,7 @@ $(document).on("click", "#accept-friend-request", function() {
     });
 });
 
-$(document).on("click", "#reject-friend-request", function(){
+$(document).on("click", "#reject-friend-request", function () {
     let id = $(this).attr("data-request-id")
     console.log(id);
 
@@ -263,19 +413,19 @@ $(document).on("click", "#reject-friend-request", function(){
         url: "/reject-friend-request/",
         dataType: "json",
         data: {
-            "id":id
+            "id": id
         },
-        success: function(response){
+        success: function (response) {
             console.log(response.data);
-            $(".accept-friend-request-hide"+id).hide()
-            $(".reject-friend-request"+id).html("<i class='fas fa-check-circle'></i> Friend Request Rejected")
-            $(".reject-friend-request"+id).addClass("text-white")
+            $(".accept-friend-request-hide" + id).hide()
+            $(".reject-friend-request" + id).html("<i class='fas fa-check-circle'></i> Friend Request Rejected")
+            $(".reject-friend-request" + id).addClass("text-white")
         }
     })
 })
 
 // UnFriend User
-$(document).on("click", "#unfriend", function(){
+$(document).on("click", "#unfriend", function () {
     let id = $(this).attr("data-friend-id")
     console.log(id);
 
@@ -283,13 +433,13 @@ $(document).on("click", "#unfriend", function(){
         url: "/unfriend/",
         dataType: "json",
         data: {
-            "id":id
+            "id": id
         },
-        success: function(response){
+        success: function (response) {
             console.log(response);
             $("#unfriend-text").html("<i class='fas fa-check-circle'></i> Friend Removed ")
-            $(".unfriend"+id).addClass("bg-blue-600")
-            $(".unfriend"+id).removeClass("bg-red-600")
+            $(".unfriend" + id).addClass("bg-blue-600")
+            $(".unfriend" + id).removeClass("bg-red-600")
         }
     })
 })

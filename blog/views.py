@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from elasticsearch_dsl.query import MultiMatch  
 from .documents import PostDocument
+from django.core.paginator import Paginator
 
 
 # Create your views here.
@@ -19,6 +20,7 @@ class PostListView(ListView):
     models = Post
     template_name = 'blog/home.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
     def get_queryset(self):
         q = self.request.GET.get('q')
@@ -35,7 +37,51 @@ class PostListView(ListView):
         context['search_query'] = self.request.GET.get('q', '')
         return context
     
+def load_more_posts(request):
+    page = request.GET.get('page', 1)
+    posts_list = Post.objects.all().order_by('-date_posted')
+    paginator = Paginator(posts_list, 5)
+    try: 
+        posts = paginator.page(page)
+    except:
+        return JsonResponse({'posts': [], 'has_next': False})
+        
+    post_data = [{
+        'id': post.id,
+        'title': post.title,
+        'content': post.content[:300],  # Lấy 300 ký tự đầu
+        'author': post.author.username,
+        'author_image': post.author.profile.image.url,
+        'date_posted': post.date_posted.strftime('%Y-%m-%d'),
+        'like_count': post.likes.count(),
+        'comment_count': post.comments.count(),  # Đếm số comment
+    } for post in posts]
+    
+    return JsonResponse({
+        'posts': post_data,
+        'has_next': posts.has_next(),
+    })
 
+def load_comments(request, post_id):
+    post = Post.objects.get(id=post_id)
+    comments = Comment.objects.filter(post=post).order_by('-date_posted')
+    
+    comments_data = [{
+        'id': comment.id,
+        'author': comment.author.username,
+        'content': comment.content,
+        'date_posted': comment.date_posted.strftime('%Y-%m-%d'),
+        'profile_image_url': comment.author.profile.image.url,
+        'replies': [{
+            'id': reply.id,
+            'author': reply.author.username,
+            'content': reply.content,
+            'date_posted': reply.date_posted.strftime('%Y-%m-%d'),
+            'profile_image_url': reply.author.profile.image.url,
+        } for reply in comment.replies.all()]
+    } for comment in comments]
+    
+    return JsonResponse({'comments': comments_data})        
 
 class PostDetailView(DetailView):
     models = Post

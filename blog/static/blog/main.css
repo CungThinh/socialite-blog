@@ -943,7 +943,7 @@ button {
   overflow: visible;
   background: transparent;
   color: inherit;
-  font: inherit;
+  font: inherit;  
   line-height: normal;
   cursor: pointer;
 }
@@ -1458,4 +1458,29 @@ img {
 
 .status_online .user_status {
   background-color: green; /* Màu xanh lá khi online */
+}
+
+#loading {
+  display: none; /* Ban đầu ẩn */
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+  color: #666;
+}
+
+#loading p {
+  animation: fadeIn 1s ease-in-out infinite; /* Thêm hiệu ứng fadeIn */
+}
+
+/* Hiệu ứng loading mờ dần */
+@keyframes fadeIn {
+  0% {
+      opacity: 0.3;
+  }
+  50% {
+      opacity: 1;
+  }
+  100% {
+      opacity: 0.3;
+  }
 }
