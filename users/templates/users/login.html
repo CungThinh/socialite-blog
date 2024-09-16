@@ -1,4 +1,5 @@
 {% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -62,6 +63,19 @@
                     <input type="text" name="username" placeholder="Username" class="with-border">
                     <input type="password" name="password" placeholder="Password" class="with-border">
                     <button type="submit" class="bg-blue-600 font-semibold p-3 rounded-md text-center text-white w-full"> Log In </button>
+                    <!-- Thêm các nút đăng nhập bằng mạng xã hội -->
+                    <div class="flex justify-center space-x-4 mt-4">
+                        <a href="{% provider_login_url 'github' %}" class="text-gray-800">
+                            <ion-icon name="logo-github" class="text-4xl"></ion-icon>
+                        </a>
+                        <a href="#" class="text-red-600">
+                            <ion-icon name="logo-google" class="text-4xl"></ion-icon>
+                        </a>
+                        <a href="#" class="text-blue-600">
+                            <ion-icon name="logo-facebook" class="text-4xl"></ion-icon>
+                        </a>
+                    </div>
+                
                     <a href="#" class="text-blue-500 text-center block"> Forgot Password? </a>
                     <hr class="pb-3.5">
                     <div class="flex">
@@ -70,6 +84,8 @@
                         </a>
                     </div>
                 </form>
+
+
 
                 <div class="mt-8 text-center text-sm"> <a href="#" class="font-semibold hover:underline"> Create a Page </a> for a celebrity, band or business </div>
             </div>

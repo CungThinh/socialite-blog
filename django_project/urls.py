@@ -13,6 +13,7 @@ urlpatterns = [
     path('', include("blog.urls")),
     path('chat/',  include("chat.urls")),
     path("login/", LoginView, name="login"),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:
