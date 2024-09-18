@@ -44,3 +44,11 @@ Notes:  It's not responsive
 ![ScreenRecording2024-09-18at20 22 23-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/36751309-9440-481d-89bc-37d2eed2ed73)
 
 
+## Future Improvement
+- Realtime friends status
+- Code Refactor
+- Build some realtime stuff
+- Add google and facebook providers
+- more
+
+
