@@ -1059,6 +1059,7 @@ img {
   margin: auto;
   right: 10px !important;
   left: auto !important;
+  overflow-y: auto;
 }
 
 .header_dropdown .drop_headline {

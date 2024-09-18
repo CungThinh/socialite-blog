@@ -6,12 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Friend, FriendRequest
+from .models import Friend, FriendRequest, Notification
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from elasticsearch_dsl.query import MultiMatch  
 from .documents import PostDocument
 from django.core.paginator import Paginator
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 # Create your views here.
@@ -137,6 +139,26 @@ def like_post(request, pk):
     else:
         liked = True
         post.likes.add(request.user)
+        
+        # Like your own post
+        if post.author != request.user: 
+            notification = Notification(
+                user = post.author,
+                sender = request.user,
+                notification_type = Notification.LIKE,
+                post = post
+            )
+            
+            notification.save()
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'user_{post.author.id}', 
+                {
+                    'type': 'send_notification',
+                    'notification': notification.to_dict()
+                }
+            )
         
     return JsonResponse({'likes_count': post.likes.count(), 'liked': liked})
 
@@ -322,3 +344,15 @@ def check_friend_status(request):
             })
 
     return JsonResponse({'friends': friends_status})
+
+def get_user_notifications(request):
+    if request.user.is_authenticated:
+        notifications = Notification.objects.filter(user=request.user).order_by('is_read', '-timestamp').all()
+        return JsonResponse({'notifications': [n.to_dict() for n in notifications]})
+    
+def set_notification_is_read(request):
+    if request.user.is_authenticated:
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'error'}, status=403)

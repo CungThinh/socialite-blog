@@ -467,3 +467,91 @@ $(document).on("click", "#unfriend", function () {
 //     // Gọi hàm ngay lập tức khi trang được tải
 //     updateFriendStatus();
 // });
+
+
+
+// const notificationSocket = new WebSocket(
+//     'ws://' + window.location.host + '/ws/notifications/'
+// );
+
+// notificationSocket.onmessage = function(e) {
+//     const data = JSON.parse(e.data);
+//     const notification = data.notification;
+
+//     if (notification.notification_type === 'like') {
+//         console.log(`${notification.sender.username} liked your post: ${notification.post.title}`);
+//     }
+//     // Thêm các điều kiện khác cho các loại thông báo khác
+// };
+
+const websocketProtocol =
+    window.location.protocol === "https:" ? "wss" : "ws";
+const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notifications/`;
+
+socket = new WebSocket(wsEndpoint);
+
+socket.onopen = (event) => {
+    console.log("WebSocket connection opened!");
+};
+
+socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const notification = data.notification;
+
+    createNewNotificationElement(notification);
+
+    const notificationCountElement = document.getElementById('notification-count');
+    if (notificationCountElement) {
+        let count = parseInt(notificationCountElement.innerText) || 0;
+        notificationCountElement.innerText = count + 1;
+    }
+};
+
+socket.onclose = function(e) {
+    console.log('Websocket close.!');
+};
+
+function createNewNotificationElement(notification) {
+    const notificationList = document.querySelector('.header_dropdown ul');
+
+    // Tạo phần tử li mới
+    const newNotification = document.createElement('li');
+    newNotification.classList.add('not-read', 'mb-3', 'mt-3');
+
+    // Nội dung của thông báo
+    newNotification.innerHTML = `
+        <a href="#">
+            <div class="drop_avatar">
+                <img src="${notification.sender_image_url}" alt="">
+            </div>
+            <span class="drop_icon bg-gradient-primary">
+                <i class="fas fa-thumbs-up"></i>
+            </span>
+            <div class="drop_text">
+                <p>
+                    <strong>${notification.sender}</strong> Liked your post
+                    <span class="text-link">${notification.post_title}</span>
+                </p>
+                <time> <small>just now</small> </time>
+            </div>
+        </a>
+    `;
+
+    // Chèn thông báo mới vào đầu danh sách thông báo
+    notificationList.insertBefore(newNotification, notificationList.firstChild);
+}
+
+$(document).on("click", "#notification-icon", function (e) {
+    $.ajax({
+        url: "update-notifications/",
+        dataType: "json",
+        success: function (response) {
+            if (response.status === "success") {
+                $("#notification-count").text("0");
+            }
+        },
+        error: function (xhr, status, error) {
+            console.log("Error:", error);
+        }
+    });
+});

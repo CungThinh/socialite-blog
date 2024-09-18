@@ -92,3 +92,34 @@ class FriendRequest(models.Model):
     class Meta:
         ordering = ["-date"]
         verbose_name_plural = "Friend Request"
+        
+class Notification(models.Model):
+    LIKE = 'like'
+    COMMENT = 'comment'
+    REPLY = 'reply'
+    
+    NOTIFICATION_TYPES = [
+        (LIKE, 'Like'),
+        (COMMENT, 'Comment'),
+        (REPLY, 'Reply'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender_notifications')
+    post = models.ForeignKey(Post, on_delete=models.SET_NULL, null=True, blank=True, related_name="noti_post")
+    is_read = models.BooleanField(default=False)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    timestamp = models.DateTimeField(default=timezone.now)
+    
+    def to_dict(self):
+        return {
+            'sender': self.sender.username,
+            'notification_type': self.notification_type,
+            'post_id': self.post.id,
+            'is_read': self.is_read,
+            'sender_image_url': self.sender.profile.image.url,
+            'post_title': self.post.title,
+        }
+    
+    
+    

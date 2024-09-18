@@ -19,6 +19,8 @@ urlpatterns = [
     path("reject-friend-request/", views.reject_friend_request, name="reject-friend-request"),
     path("unfriend/", views.unfriend, name="unfriend"),
     path('check_friends_status/', views.check_friend_status, name='check_friends_status'),
+    path('load-notifications/', views.get_user_notifications, name='load-notification'),
+    path('update-notifications/', views.set_notification_is_read, name='update-notification'),
 ]
 
 #Expect: <App>/<model>_<view type>.html

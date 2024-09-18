@@ -17,7 +17,7 @@ function connectToRoom(roomId) {
   }
   const websocketProtocol =
     window.location.protocol === "https:" ? "wss" : "ws";
-  const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/${roomId}`;
+  const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/chat-room/${roomId}`;
   socket = new WebSocket(wsEndpoint);
 
   socket.onopen = (event) => {

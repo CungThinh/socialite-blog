@@ -110,6 +110,55 @@
                 <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd"></path></svg>
                 <span>{{unread_message_count}}</span>
               </a>
+              <a href="#" class="is_icon" id="notification-icon" uk-tooltip="title: Notifications">
+                <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                <span class="notification-count" id="notification-count">{{ notifications.count }}</span>
+              </a>
+              <div uk-drop="mode: click" class="header_dropdown">
+                <div class="dropdown_scrollbar" data-simplebar>
+                    <div class="drop_headline">
+                        <h4>Notifications </h4>
+                        <div class="btn_action">
+                            <a href="#" data-tippy-placement="left" title="Notifications">
+                                <ion-icon name="settings-outline"></ion-icon>
+                            </a>
+                            <a href="#" data-tippy-placement="left" title="Mark as read all">
+                                <ion-icon name="checkbox-outline"></ion-icon>
+                            </a>
+                        </div>
+                    </div>
+                    <ul>
+                        
+                    {% for n in notifications %}
+                        <li class="{% if n.is_read == False %}not-read{% endif %} mb-3 mt-3">
+                            <a href="#">
+                                <div class="drop_avatar">
+                                    <img src="{{n.sender.profile.image.url}}" alt="">
+                                </div>
+                                <span class="drop_icon bg-gradient-primary">
+                                    
+                                    {% if n.notification_type == "like" %}<i class="fas fa-thumbs-up"></i>{% endif %}
+                                        
+                                </span>
+                                <div class="drop_text">
+                                    <p>
+                                        <strong>{{n.sender.username|title}}</strong> 
+                                        
+                                        {% if n.notification_type == "like" %} Liked your post {% endif %}
+                                        
+                                        {% if n.post %}
+                                        <span class="text-link">{{ n.post.title }} </span>
+                                        {% endif %}
+                                            
+                                    </p>
+                                    <time> <small>{{n.timestamp|timesince}} ago</small> </time>
+                                </div>
+                            </a>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+              </div>
               <a href="#" class="is_icon">
                 <i class="fas fa-user-plus text-secondary"></i>
                 <span>{{ friend_request.count }}</span>
