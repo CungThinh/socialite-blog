@@ -3,6 +3,7 @@
 
 Full features blog posting website
 
+Notes:  It's not responsive
 
 ## Features
 
@@ -28,7 +29,7 @@ Full features blog posting website
 
 
 
-## First Look
+## First Look (Wait for loading)
 
 ### Realtime notifications
 ![ScreenRecording2024-09-18at20 02 52-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/c915dc62-063e-45b9-b5b0-9a293e1cc0e4)
